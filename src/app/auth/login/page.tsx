@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import Spinner from '../components/Spinner'; // Adjust path as needed
+import Spinner from '../../components/Spinner'; // Adjust path as needed
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
