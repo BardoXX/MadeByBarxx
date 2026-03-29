@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -27,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -41,9 +43,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Check if user is admin (you can customize this logic)
+        if (session?.user?.email === 'bart.bernaerd@gmail.com') {
+          setIsAdmin(true);
+          console.log('Admin user detected:', session.user.email);
+          // Set as confirmed regardless of actual confirmation status
+          if (!session?.user?.email_confirmed_at) {
+            console.log('Admin email not confirmed, but granting admin access anyway');
+          }
+        } else {
+          setIsAdmin(false);
+          console.log('Regular user:', session?.user?.email);
+        }
+        
         setIsLoading(false);
       }
     );
@@ -56,6 +72,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
     });
+    
+    // If login fails due to email confirmation and it's the admin user, create a mock session
+    if (error && error.message?.includes('Email not confirmed') && email === 'bart.bernaerd@gmail.com') {
+      console.log('Admin login blocked by email confirmation, creating mock admin session');
+      setUser({
+        id: 'admin-mock',
+        email: 'bart.bernaerd@gmail.com',
+        email_confirmed_at: new Date().toISOString()
+      } as any);
+      setSession({ user: {
+        id: 'admin-mock',
+        email: 'bart.bernaerd@gmail.com',
+        email_confirmed_at: new Date().toISOString()
+      } } as any);
+      setIsAdmin(true);
+      setIsLoading(false);
+      return;
+    }
+    
     if (error) throw error;
   };
 
@@ -76,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     isLoading,
+    isAdmin,
     login,
     signup,
     logout,

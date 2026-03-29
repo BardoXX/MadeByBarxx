@@ -1,36 +1,42 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from '../context/AuthContext'; // Import AuthProvider
+'use client';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// This is a placeholder for the main layout.
+// You'll need to integrate the Navbar and AuthProvider here.
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import React from 'react';
+import Navbar from '../components/navbar/Navbar';
+import { AuthProvider } from '../context/AuthContext';
+import './globals.css';
+import { usePathname } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'BarXX SaaS Platform', // Updated title from gemini.md
-  description: 'Modern web application for digital products', // Updated description from gemini.md
-};
-
-export default function RootLayout({
-  children,
-}: {
+interface RootLayoutProps {
   children: React.ReactNode;
-}) {
+}
+
+// This layout assumes it's the root layout for the 'app' directory.
+// Adjust the path to AuthProvider if it's different.
+const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
+  const pathname = usePathname();
+  const isAuthPage = pathname?.startsWith('/auth');
+  const isHomePage = pathname === '/';
+
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider> {/* Wrap your app with AuthProvider */}
+    <html lang="en" className="h-full">
+      <body className="h-full">
+        <AuthProvider>
+          {isHomePage && <Navbar />}
+          {!isAuthPage && !isHomePage && <Navbar />}
+          {isAuthPage || isHomePage ? (
+            children
+          ) : (
+            <main className="container mx-auto p-4">
+              {children}
+            </main>
+          )}
+        </AuthProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
